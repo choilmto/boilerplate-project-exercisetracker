@@ -12,4 +12,4 @@ jobs:
       - name: Lint
         run: npm run eslint
       - name: Test
-        run: npm run test
+        run: LOGFLARE_API_KEY=${{ secrets.LOGFLARE_API_KEY }} LOGFLARE_SOURCE_TOKEN=${{ secrets.LOGFLARE_SOURCE_TOKEN }} npm run test
