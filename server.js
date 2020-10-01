@@ -33,10 +33,12 @@ app.use((err, req, res) => {
     const keys = Object.keys(err.errors);
     // report the first validation error
     errMessage = err.errors[keys[0]].message;
+    logger.info("Mongoose validation error", errMessage);
   } else {
     // generic or custom error
     errCode = err.status || 500;
     errMessage = err.message || "Internal Server Error";
+    logger.info(errMessage);
   }
   res.status(errCode).type("txt").send(errMessage);
 });
