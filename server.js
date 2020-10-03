@@ -9,6 +9,13 @@ const mongoose = require("mongoose");
 mongoose.connect(process.env.DB_URI || "mongodb://localhost/exercise-track");
 const userSchema = new mongoose.Schema({
   username: String,
+  log: [
+    {
+      duration: String,
+      description: String,
+      date: Date,
+    },
+  ],
 });
 const User = mongoose.model("User", userSchema);
 
@@ -55,14 +62,29 @@ app.post("/api/exercise/new-user", async (req, res, next) => {
     next(err);
   }
 });
-app.post("/api/exercise/add", (req, res) => {
-  res.json({
-    _id: req.body.userId,
-    username: "TEST_USERNAME",
-    date: req.body.date || Date.now(),
-    duration: req.body.duration,
-    description: req.body.description,
-  });
+app.post("/api/exercise/add", async (req, res, next) => {
+  const filter = { _id: req.body.userId };
+  try {
+    const user = await User.find(filter);
+    if (user.length === 0) {
+      res.status(400).send("Invalid userId");
+      return;
+    }
+    const exercise = {
+      date: req.body.date || Date.now(),
+      duration: req.body.duration,
+      description: req.body.description,
+    };
+    const doc = { $push: { log: exercise } };
+    await User.update(filter, doc);
+    res.json({
+      ...exercise,
+      _id: user[0]._id,
+      username: user[0].username,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Not found middleware
