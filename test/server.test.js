@@ -39,14 +39,45 @@ describe("Get all users", () => {
 });
 
 describe("Get user log", () => {
-  test("when the log has a count of 2", async () => {
-    const ID = "TEST_ID";
+  test("when the log has a count of 0", async () => {
+    const USERNAME = "TEST_USERNAME";
+    const { body: user } = await request
+      .post("/api/exercise/new-user")
+      .send("username=" + USERNAME)
+      .set("Accept", "application/json");
+
     const response = await request
-      .get("/api/exercise/log?userId=" + ID)
+      .get("/api/exercise/log?userId=" + user._id)
       .set("Accept", "application/json");
 
     expect(response.status).toBe(200);
-    expect(response.body._id).toBe(ID);
+    expect(response.body._id).toBe(user._id);
+    expect(response.body.count).toBe(0);
+  });
+
+  test("when the log has a count of 2", async () => {
+    const USERNAME = "TEST_USERNAME";
+    const { body: user } = await request
+      .post("/api/exercise/new-user")
+      .send("username=" + USERNAME)
+      .set("Accept", "application/json");
+
+    await request
+      .post("/api/exercise/add")
+      .send(`userId=${user._id}&description=run&duration=10`)
+      .set("Accept", "application/json");
+    await request
+      .post("/api/exercise/add")
+      .send(`userId=${user._id}&description=jump&duration=5`)
+      .set("Accept", "application/json");
+
+    const response = await request
+      .get("/api/exercise/log?userId=" + user._id)
+      .set("Accept", "application/json");
+
+    expect(response.status).toBe(200);
+    expect(response.body._id).toBe(user._id);
+    expect(response.body.count).toBe(2);
   });
 });
 
