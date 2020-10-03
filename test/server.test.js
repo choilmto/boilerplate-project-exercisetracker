@@ -22,13 +22,19 @@ describe("GET", () => {
 });
 
 describe("Get all users", () => {
-  test("when there are zero users", async () => {
+  test("when there is one user", async () => {
+    const USERNAME = "TEST_USERNAME";
+    await request
+      .post("/api/exercise/new-user")
+      .send("username=" + USERNAME)
+      .set("Accept", "application/json");
+
     const response = await request
       .get("/api/exercise/users")
       .set("Accept", "application/json");
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+    expect(response.body[0].username).toBe(USERNAME);
   });
 });
 
