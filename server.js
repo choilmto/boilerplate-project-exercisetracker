@@ -21,8 +21,12 @@ app.use(express.static("public"));
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
-app.get("/api/exercise/users", (req, res) => {
-  res.json([]);
+app.get("/api/exercise/users", async (req, res, next) => {
+  try {
+    res.json(await User.find());
+  } catch (err) {
+    next(err);
+  }
 });
 app.get("/api/exercise/log", (req, res) => {
   res.json({
