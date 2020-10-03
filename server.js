@@ -35,24 +35,19 @@ app.get("/api/exercise/users", async (req, res, next) => {
     next(err);
   }
 });
-app.get("/api/exercise/log", (req, res) => {
-  res.json({
-    _id: req.query.userId,
-    username: "TEST_USERNAME",
-    count: 2,
-    log: [
-      {
-        description: "TEST_ACTIVITY_1",
-        duration: "TEST_DURATION",
-        date: Date.now(),
-      },
-      {
-        description: "TEST_ACTIVITY_2",
-        duration: "TEST_DURATION",
-        date: Date.now(),
-      },
-    ],
-  });
+app.get("/api/exercise/log", async (req, res, next) => {
+  const filter = { _id: req.query.userId };
+  try {
+    const [user] = await User.find(filter);
+    res.json({
+      _id: user._id,
+      username: user.username,
+      count: user.log.length,
+      log: user.log,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 app.post("/api/exercise/new-user", async (req, res, next) => {
   const user = new User({ username: req.body.username });
@@ -65,8 +60,8 @@ app.post("/api/exercise/new-user", async (req, res, next) => {
 app.post("/api/exercise/add", async (req, res, next) => {
   const filter = { _id: req.body.userId };
   try {
-    const user = await User.find(filter);
-    if (user.length === 0) {
+    const [user] = await User.find(filter);
+    if (user === undefined) {
       res.status(400).send("Invalid userId");
       return;
     }
@@ -79,8 +74,8 @@ app.post("/api/exercise/add", async (req, res, next) => {
     await User.update(filter, doc);
     res.json({
       ...exercise,
-      _id: user[0]._id,
-      username: user[0].username,
+      _id: user._id,
+      username: user.username,
     });
   } catch (err) {
     next(err);
