@@ -122,16 +122,3 @@ describe("Post exercise", () => {
     expect(response.status).toBe(500);
   });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
