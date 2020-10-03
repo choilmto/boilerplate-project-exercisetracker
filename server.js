@@ -52,7 +52,11 @@ app.get("/api/exercise/log", async (req, res, next) => {
 app.post("/api/exercise/new-user", async (req, res, next) => {
   const user = new User({ username: req.body.username });
   try {
-    res.json(await user.save());
+    const savedUser = await user.save();
+    res.json({
+      _id: savedUser._id,
+      username: savedUser.username,
+    });
   } catch (err) {
     next(err);
   }
