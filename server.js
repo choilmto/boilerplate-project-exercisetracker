@@ -45,11 +45,8 @@ const formatDate = (dateTime) => {
 };
 const transformExercise = (doc, ret) => {
   //format date and remove properties
-  return {
-    duration: ret.duration,
-    description: ret.description,
-    date: formatDate(ret.date),
-  };
+  ret.date = formatDate(ret.date);
+  return ret;
 };
 
 app.use(cors());
@@ -120,9 +117,14 @@ app.post("/api/exercise/add", async (req, res, next) => {
       userId: req.body.userId,
     });
     const doc = await exercise.save();
+    const transformedExercise = doc.toObject({ transform: transformExercise });
+    const transformedUser = user.toObject({ transform: transformUser });
     res.json({
-      ...doc.toObject({ transform: transformExercise }),
-      ...user.toObject({ transform: transformUser }),
+      username: transformedUser.username,
+      description: transformedExercise.description,
+      duration: transformedExercise.duration,
+      _id: transformedUser._id,
+      date: transformedExercise.date,
     });
   } catch (err) {
     next(err);
@@ -144,12 +146,12 @@ app.use((err, req, res) => {
     const keys = Object.keys(err.errors);
     // report the first validation error
     errMessage = err.errors[keys[0]].message;
-    logger.info("Mongoose validation error", errMessage);
+    logger.info("Mongoose validation error:", errMessage, "Request:");
   } else {
     // generic or custom error
     errCode = err.status || 500;
     errMessage = err.message || "Internal Server Error";
-    logger.info(errMessage);
+    logger.info(errMessage, "Request:");
   }
   res.status(errCode).type("txt").send(errMessage);
 });
