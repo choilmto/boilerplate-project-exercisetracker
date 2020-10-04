@@ -19,6 +19,27 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
+const formatDate = (dateTime) => {
+  const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const month = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return `${dayOfWeek[dateTime.getDay()]} ${
+    month[dateTime.getMonth()]
+  } ${dateTime.getDate()} ${dateTime.getYear() + 1900}`;
+};
+
 app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -69,10 +90,10 @@ app.post("/api/exercise/add", async (req, res, next) => {
       res.status(400).send("Invalid userId");
       return;
     }
-
+    const date = req.body.date ? new Date(req.body.date) : new Date();
     const exercise = {
-      date: req.body.date ? new Date(req.body.date) : Date.now().toString(),
-      duration: req.body.duration,
+      date: formatDate(date),
+      duration: parseInt(req.body.duration),
       description: req.body.description,
     };
     const doc = { $push: { log: exercise } };
