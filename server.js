@@ -71,7 +71,7 @@ app.post("/api/exercise/add", async (req, res, next) => {
     }
 
     const exercise = {
-      date: req.body.date ? new Date(req.body.dae) : Date.now(),
+      date: req.body.date ? new Date(req.body.date) : Date.now(),
       duration: req.body.duration,
       description: req.body.description,
     };
@@ -113,8 +113,8 @@ app.use((err, req, res) => {
 });
 
 app.post("/api/exercise/new-user", (req, res) => {
-  res.json({ username: "testUser", _id: "testId" })
-})
+  res.json({ username: "testUser", _id: "testId" });
+});
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   logger.info("Your app is listening on port " + listener.address().port);
