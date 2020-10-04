@@ -23,29 +23,10 @@ const exerciseSchema = new mongoose.Schema({
   date: Date,
 });
 const Exercise = mongoose.model("Exercise", exerciseSchema);
-const formatDate = (dateTime) => {
-  const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const month = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return `${dayOfWeek[dateTime.getDay()]} ${
-    month[dateTime.getMonth()]
-  } ${dateTime.getDate()} ${dateTime.getYear() + 1900}`;
-};
+
 const transformExercise = (doc, ret) => {
   //format date and remove properties
-  ret.date = formatDate(ret.date);
+  ret.date = new Date(ret.date).toDateString();
   return ret;
 };
 
