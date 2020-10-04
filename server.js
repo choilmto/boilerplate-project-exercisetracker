@@ -9,16 +9,20 @@ const mongoose = require("mongoose");
 mongoose.connect(process.env.DB_URI || "mongodb://localhost/exercise-track");
 const userSchema = new mongoose.Schema({
   username: String,
-  log: [
-    {
-      duration: Number,
-      description: String,
-      date: String,
-    },
-  ],
 });
 const User = mongoose.model("User", userSchema);
+const transformUser = (doc, ret) => {
+  delete ret.__v;
+  return ret;
+};
 
+const exerciseSchema = new mongoose.Schema({
+  userId: String,
+  duration: Number,
+  description: String,
+  date: Date,
+});
+const Exercise = mongoose.model("Exercise", exerciseSchema);
 const formatDate = (dateTime) => {
   const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const month = [
@@ -39,6 +43,14 @@ const formatDate = (dateTime) => {
     month[dateTime.getMonth()]
   } ${dateTime.getDate()} ${dateTime.getYear() + 1900}`;
 };
+const transformExercise = (doc, ret) => {
+  //format date and remove properties
+  return {
+    duration: ret.duration,
+    description: ret.description,
+    date: formatDate(ret.date),
+  };
+};
 
 app.use(cors());
 
@@ -51,57 +63,66 @@ app.get("/", (req, res) => {
 });
 app.get("/api/exercise/users", async (req, res, next) => {
   try {
-    res.json(await User.find());
+    const users = await User.find();
+    res.json(users.map((user) => user.toObject({ transform: transformUser })));
   } catch (err) {
     next(err);
   }
 });
 app.get("/api/exercise/log", async (req, res, next) => {
-  const filter = { _id: req.query.userId };
+  let filter = { userId: req.query.userId };
+  if (req.query.to && req.query.from) {
+    filter.date = {
+      $gt: req.query.from,
+      $lt: req.query.to,
+    };
+  }
+  const options = req.query.limit ? { limit: parseInt(req.query.limit) } : {};
   try {
-    const [user] = await User.find(filter);
+    const user = await User.findById(req.query.userId);
+    if (user === undefined) {
+      res.status(400).send("Invalid userId");
+      return;
+    }
+    const exercises = await Exercise.find(filter, null, options);
     res.json({
-      _id: user._id,
-      username: user.username,
-      count: user.log.length,
-      log: user.log,
+      ...user.toObject({ transform: transformUser }),
+      count: exercises.length,
+      log: exercises.map((exercise) =>
+        exercise.toObject({ transform: transformExercise })
+      ),
     });
   } catch (err) {
     next(err);
   }
 });
 app.post("/api/exercise/new-user", async (req, res, next) => {
-  const user = new User({ username: req.body.username });
   try {
-    const savedUser = await user.save();
-    res.json({
-      _id: savedUser._id,
-      username: savedUser.username,
-    });
+    const user = new User({ username: req.body.username });
+    const doc = await user.save();
+    res.json(doc.toObject({ transform: transformUser }));
   } catch (err) {
     next(err);
   }
 });
 app.post("/api/exercise/add", async (req, res, next) => {
-  const filter = { _id: req.body.userId };
   try {
-    const [user] = await User.find(filter);
+    const user = await User.findById(req.body.userId);
     if (user === undefined) {
       res.status(400).send("Invalid userId");
       return;
     }
     const date = req.body.date ? new Date(req.body.date) : new Date();
-    const exercise = {
-      date: formatDate(date),
+    const exercise = new Exercise({
+      date,
       duration: parseInt(req.body.duration),
       description: req.body.description,
-    };
-    const doc = { $push: { log: exercise } };
-    await User.update(filter, doc);
+      userId: req.body.userId,
+    });
+    const doc = await exercise.save();
     res.json({
-      ...exercise,
-      _id: user._id,
-      username: user.username,
+      ...doc.toObject({ transform: transformExercise }),
+      ...user.toObject({ transform: transformUser }),
     });
   } catch (err) {
     next(err);
