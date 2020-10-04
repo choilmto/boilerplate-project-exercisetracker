@@ -69,8 +69,9 @@ app.post("/api/exercise/add", async (req, res, next) => {
       res.status(400).send("Invalid userId");
       return;
     }
+
     const exercise = {
-      date: req.body.date || Date.now(),
+      date: req.body.date ? new Date(req.body.dae) : Date.now(),
       duration: req.body.duration,
       description: req.body.description,
     };
@@ -110,6 +111,10 @@ app.use((err, req, res) => {
   }
   res.status(errCode).type("txt").send(errMessage);
 });
+
+app.post("/api/exercise/new-user", (req, res) => {
+  res.json({ username: "testUser", _id: "testId" })
+})
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   logger.info("Your app is listening on port " + listener.address().port);
