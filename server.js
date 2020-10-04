@@ -11,9 +11,9 @@ const userSchema = new mongoose.Schema({
   username: String,
   log: [
     {
-      duration: String,
+      duration: Number,
       description: String,
-      date: Date,
+      date: String,
     },
   ],
 });
@@ -71,7 +71,7 @@ app.post("/api/exercise/add", async (req, res, next) => {
     }
 
     const exercise = {
-      date: req.body.date ? new Date(req.body.date) : Date.now(),
+      date: req.body.date ? new Date(req.body.date) : Date.now().toString(),
       duration: req.body.duration,
       description: req.body.description,
     };
