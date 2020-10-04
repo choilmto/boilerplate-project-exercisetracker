@@ -111,6 +111,22 @@ describe("Post exercise", () => {
     expect(response.body.username).toBe(user.username);
   });
 
+  test("when valid ID, duration, description, and date are submitted", async () => {
+    const USERNAME = "TEST_USERNAME";
+    const { body: user } = await request
+      .post("/api/exercise/new-user")
+      .send("username=" + USERNAME)
+      .set("Accept", "application/json");
+
+    const response = await request
+      .post("/api/exercise/add")
+      .send(`userId=${user._id}&description=run&duration=10&date=2020-01-01`)
+      .set("Accept", "application/json");
+
+    expect(response.status).toBe(200);
+    expect(response.body.username).toBe(user.username);
+  });
+
   test("when invalid ID is submitted", async () => {
     const _id = "TEST_ID";
 
